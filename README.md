@@ -111,6 +111,7 @@ Here is an example of how to run ProteinMPNN-FastRelax with a silent file of des
 
 ```
 <base_dir>/mpnn_fr/dl_interface_design.py -silent my_designs.silent
+mpnn_fr/dl_interface_design.py -pdbdir x -outpdbdir /mnt/nas1/RFdiffusion/output/test
 ```
 
 This will create a file titled `out.silent` containing your designs. This file can be fed directly to AF2 interface prediction.
@@ -164,6 +165,3 @@ Struct with tag SAMETAG failed in 0 seconds with error: <class 'EXCEPTION'>
 Where SAMETAG and EXCEPTION can be many different things. What is happening here is that the main loops of both of the scripts provided here are wrapped in a try-catch block; the script tries to run each design and if an error occurs, the script notes which design had an error and continues to the next design. This error catching is convenient when running production-scale design campaigns but is a nuisance for debugging since the messages are not very informative.
 
 If you hit this error, I recommend running the same command that yielded the error but while adding the `-debug` flag to the command. This flag will make the script run without the try-catch block and errors will print with the standard verbose, easier-to-debug messages.
-
-
-

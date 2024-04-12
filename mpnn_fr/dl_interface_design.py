@@ -15,12 +15,14 @@ import glob
 
 import torch
 import json
-
+import os
+import sys
+sys.path.append(os.path.abspath('.'))
 import util_protein_mpnn as mpnn_util
 
-parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(parent, 'include'))
-from silent_tools import silent_tools
+# parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(os.path.join(parent, 'include'))
+from include.silent_tools import silent_tools
 
 init( "-beta_nov16 -in:file:silent_struct_type binary -mute all" +
     " -use_terminal_residues true -mute basic.io.database core.scoring" )
@@ -440,6 +442,3 @@ for pdb in struct_manager.iterate():
     # We are done with one pdb, record that we finished
     struct_manager.record_checkpoint(pdb)
     
-
-
-

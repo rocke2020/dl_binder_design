@@ -101,6 +101,8 @@ def generate_template_features(
 def parse_initial_guess(all_atom_positions) -> jnp.ndarray:
     '''
     Given a numpy array of all atom positions, return a jax array of the initial guess
+    Returns:
+        array of (AA-num, all-atoms-num, 3), all atoms use the first atom (N?) positions.
     '''
 
     list_all_atom_positions = np.split(all_atom_positions, all_atom_positions.shape[0])
@@ -409,4 +411,3 @@ def calculate_rmsds(
     )
 
     return rmsds
-

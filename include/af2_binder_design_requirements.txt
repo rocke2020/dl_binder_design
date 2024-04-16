@@ -1,0 +1,6 @@
+# tensorflow 2.14.0 requires ml-dtypes==0.2.0, but you have ml-dtypes 0.4.0 which is incompatible.
+# tensorstore 0.1.56 requires ml-dtypes>=0.3.1, but you have ml-dtypes 0.2.0 which is incompatible.
+# Now install ml-dtypes==0.2.0, ok to run.
+ml-dtypes==0.2.0
+dm-haiku==0.0.12
+dm-tree==0.1.8

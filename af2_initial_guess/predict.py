@@ -13,6 +13,7 @@ import jax
 import jax.numpy as jnp
 
 from jax.lib import xla_bridge
+sys.path.append(os.path.abspath('.'))
 
 from alphafold.common import residue_constants
 from alphafold.common import protein
@@ -21,12 +22,9 @@ from alphafold.data import pipeline
 from alphafold.model import data
 from alphafold.model import config
 from alphafold.model import model
-
 import af2_util
 
-parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(parent, 'include'))
-from silent_tools import silent_tools
+from include.silent_tools import silent_tools
 
 from pyrosetta import *
 from rosetta import *

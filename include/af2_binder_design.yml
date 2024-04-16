@@ -6,16 +6,9 @@ channels:
   - defaults
 dependencies:
   - python=3.11
-  - biopython
-  - ml-collections
-  - ml_dtypes
-  - tensorflow
-  - pip
-  - pyrosetta
-  - mock
-  - pip:
-    - --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html 
-    - jax[cuda12_pip]==0.4.20
-    - jaxlib
-    - dm-haiku
-    - dm-tree
+  - biopython=1.81
+  - tensorflow=2.14.0
+  - pyrosetta=2024.15+release.d972b59
+  - ml-collections=0.1.1
+  - ml-dtypes=0.2.0
+  - mock=5.1.0

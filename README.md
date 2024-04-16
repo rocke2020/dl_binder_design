@@ -56,6 +56,11 @@ channels:
 - Navigate to <base_dir>/include
 - Run `conda env create -f af2_binder_design.yml`
 - Test the environment by activating your environment and running `python importtests/af2_importtest.py`. Run this script from a node which has acccess to the GPU you wish to use for AF2 inference, this script will print out a message about whether it was able to find and use the GPU on your node. If this script hits an error before printing anything then the installation has not been done correctly.
+```
+1. conda env create -f af2_binder_design.yml
+2. pip install "jax[cuda11_pip]==0.4.20" --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+3. pip install -r include/af2_binder_design_requirements.txt
+```
 
 ### Troubleshooting AF2 GPU Compatibility <a name="setup1.3"></a>
 

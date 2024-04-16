@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 import os, sys
+import logging
+
+logger = logging.getLogger()
+logging.basicConfig(
+    level=logging.INFO, datefmt='%y-%m-%d %H:%M',
+    format='%(asctime)s %(filename)s %(lineno)d: %(message)s')
 
 from pyrosetta import *
 from pyrosetta.rosetta import *
@@ -15,13 +21,9 @@ import glob
 
 import torch
 import json
-import os
-import sys
 sys.path.append(os.path.abspath('.'))
 import util_protein_mpnn as mpnn_util
 
-# parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# sys.path.append(os.path.join(parent, 'include'))
 from include.silent_tools import silent_tools
 
 init( "-beta_nov16 -in:file:silent_struct_type binary -mute all" +
@@ -42,11 +44,10 @@ def range1( iterable ): return range( 1, iterable + 1 )
 
 parser = argparse.ArgumentParser()
 script_dir = os.path.dirname(os.path.realpath(__file__))
-
 # I/O Arguments
-parser.add_argument( "-pdbdir", type=str, default="", help='The name of a directory of pdbs to run through the model' )
+parser.add_argument( "-pdbdir", type=str, default="/mnt/nas1/RFdiffusion/test/outputs", help='The name of a directory of pdbs to run through the model' )
 parser.add_argument( "-silent", type=str, default="", help='The name of a silent file to run through the model' )
-parser.add_argument( "-outpdbdir", type=str, default="outputs", help='The directory to which the output PDB files will be written, used if the -pdbdir arg is active' )
+parser.add_argument( "-outpdbdir", type=str, default="/mnt/nas1/RFdiffusion/test/outputs/dl_interface_design", help='The directory to which the output PDB files will be written, used if the -pdbdir arg is active' )
 parser.add_argument( "-outsilent", type=str, default="out.silent", help='The name of the silent file to which output structs will be written, used if the -silent arg is active' )
 parser.add_argument( "-runlist", type=str, default='', help="The path of a list of pdb tags to run, only active when the -pdbdir arg is active (default: ''; Run all PDBs)" )
 parser.add_argument( "-checkpoint_name", type=str, default='check.point', help="The name of a file where tags which have finished will be written (default: check.point)" )
@@ -259,9 +260,7 @@ class ProteinMPNN_runner():
 
             seq, mpnn_score = seqs_scores[0] # We know there is only one entry
             sample_feats.thread_mpnn_seq(seq)
-
             self.relax_pose(sample_feats)
-
             if args.output_intermediates:
                 tag = f"{prefix}_0_cycle{cycle}"
                 self.struct_manager.dump_pose(sample_feats.pose, tag)

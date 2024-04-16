@@ -1,0 +1,7 @@
+absl-py==1.4.0
+biopython==1.78
+ml-collections==0.1.1
+numpy==1.26.4
+PyYAML==6.0.1
+requests==2.31.0
+# pyrosetta==2024.14+release.2ed86d4

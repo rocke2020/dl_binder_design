@@ -1,33 +1,29 @@
 #!/usr/bin/env python
 
-import os
-import numpy as np
-import sys
-
-from timeit import default_timer as timer
 import argparse
 import glob
+import os
+import sys
 import uuid
+from timeit import default_timer as timer
 
 import jax
 import jax.numpy as jnp
-
+import numpy as np
 from jax.lib import xla_bridge
+
 sys.path.append(os.path.abspath('.'))
 
-from alphafold.common import residue_constants
-from alphafold.common import protein
-from alphafold.common import confidence
-from alphafold.data import pipeline
-from alphafold.model import data
-from alphafold.model import config
-from alphafold.model import model
 import af2_util
+from alphafold.common import confidence, protein, residue_constants
+from alphafold.data import pipeline
+from alphafold.model import config, data, model
+from pyrosetta import *
+from rosetta import *
+from select_util import select_high_potentials
 
 from include.silent_tools import silent_tools
 
-from pyrosetta import *
-from rosetta import *
 init( '-in:file:silent_struct_type binary -mute all' )
 
 def range1(size): return range(1, size+1)
@@ -528,6 +524,7 @@ class StructManager():
 
         return pose, monomer, binderlen, usetag
 
+
 ####################
 ####### Main #######
 ####################
@@ -550,6 +547,8 @@ else:
 
 struct_manager = StructManager(args)
 af2_runner     = AF2_runner(args, struct_manager)
+if os.path.isfile(struct_manager.score_fn):
+    os.remove(struct_manager.score_fn)
 
 for pdb in struct_manager.iterate():
 
@@ -568,3 +567,7 @@ for pdb in struct_manager.iterate():
 
     # We are done with one pdb, record that we finished
     struct_manager.record_checkpoint(pdb)
+
+select_high_potentials(
+    args.outpdbdir, args.scorefilename,
+    thereshold=10, thereshold_field="pae_interaction", larger_is_better=False)

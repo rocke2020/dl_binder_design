@@ -18,7 +18,7 @@ import argparse
 import subprocess
 import time
 import glob
-
+from tqdm import tqdm
 import torch
 import json
 sys.path.append(os.path.abspath('.'))
@@ -57,7 +57,7 @@ parser.add_argument( "-debug", action="store_true", default=False, help='When ac
 # Design Arguments
 parser.add_argument( "-relax_cycles", type=int, default=1, help="The number of relax cycles to perform on each structure (default: 1)" )
 parser.add_argument( "-output_intermediates", action="store_true", help='Whether to write all intermediate sequences from the relax cycles to disk (default: False)' )
-parser.add_argument( "-seqs_per_struct", type=int, default="1", help="The number of sequences to generate for each structure (default: 1)" )
+parser.add_argument( "-seqs_per_struct", type=int, default="2", help="The number of sequences to generate for each structure (default: 1)" )
 
 # ProteinMPNN-Specific Arguments
 parser.add_argument( "-checkpoint_path", type=str, default=os.path.join(script_dir, 'ProteinMPNN/vanilla_model_weights/v_48_020.pt'), help=f"The path to the ProteinMPNN weights you wish to use, default {os.path.join(script_dir, 'ProteinMPNN/vanilla_model_weights/v_48_020.pt')}")
@@ -423,7 +423,14 @@ class StructManager():
 struct_manager     = StructManager(args)
 proteinmpnn_runner = ProteinMPNN_runner(args, struct_manager)
 
-for pdb in struct_manager.iterate():
+CALCULATE_PER_PDB_TIME = True
+t_start = time.time()
+if CALCULATE_PER_PDB_TIME:
+    pdb_files = list(struct_manager.iterate())
+    logger.info(f'{len(pdb_files) = }')
+else:
+    pdb_files = struct_manager.iterate()
+for pdb in tqdm(pdb_files):
 
     if args.debug: proteinmpnn_runner.run_model(pdb, args)
 
@@ -440,4 +447,10 @@ for pdb in struct_manager.iterate():
 
     # We are done with one pdb, record that we finished
     struct_manager.record_checkpoint(pdb)
-    
+
+t_end = time.time()
+used_seconds = t_end - t_start
+logger.info(f"Total time used: {used_seconds} seconds")
+if CALCULATE_PER_PDB_TIME:
+    used_seconds_per_pdb = used_seconds / len(pdb_files) # type: ignore
+    logger.info(f"{used_seconds_per_pdb} seconds per pdb")

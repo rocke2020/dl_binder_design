@@ -102,7 +102,7 @@ def parse_initial_guess(all_atom_positions) -> jnp.ndarray:
     '''
     Given a numpy array of all atom positions, return a jax array of the initial guess
     Returns:
-        array of (AA-num, all-atoms-num, 3), all atoms use the first atom (N?) positions.
+        array of (AA-num, all-atoms-num, 3), all atoms use the first atom (N) positions.
     '''
 
     list_all_atom_positions = np.split(all_atom_positions, all_atom_positions.shape[0])
@@ -121,6 +121,9 @@ def parse_initial_guess(all_atom_positions) -> jnp.ndarray:
 def af2_get_atom_positions(pose, tmp_fn) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Given a pose, return the AF2 atom positions array and atom mask array for the protein.
+    Returns:
+        all_positions, only key atoms are present, [L, 14, 3], others are zeros
+        all_positions_mask, only key atoms are present with 1, others are zeros. 0 is filtered out.
     '''
 
     # write pose to pdb file

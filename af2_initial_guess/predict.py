@@ -6,12 +6,12 @@ import os
 import sys
 import uuid
 from timeit import default_timer as timer
-
+from pathlib import Path
 import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.lib import xla_bridge
-
+from tqdm import tqdm
 sys.path.append(os.path.abspath('.'))
 
 import af2_util
@@ -23,7 +23,7 @@ from rosetta import *
 from select_util import select_high_potentials
 
 from include.silent_tools import silent_tools
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 init( '-in:file:silent_struct_type binary -mute all' )
 
 def range1(size): return range(1, size+1)
@@ -35,9 +35,9 @@ def range1(size): return range(1, size+1)
 parser = argparse.ArgumentParser()
 
 # I/O Arguments
-parser.add_argument( "-pdbdir", type=str, default="", help='The name of a directory of pdbs to run through the model' )
+parser.add_argument( "-pdbdir", type=str, default="/mnt/nas1/RFdiffusion/test/outputs/dl_interface_design", help='The name of a directory of pdbs to run through the model' )
 parser.add_argument( "-silent", type=str, default="", help='The name of a silent file to run through the model' )
-parser.add_argument( "-outpdbdir", type=str, default="outputs", help='The directory to which the output PDB files will be written. Only used when -pdbdir is active' )
+parser.add_argument( "-outpdbdir", type=str, default="/mnt/nas1/RFdiffusion/test/outputs/af2_predict", help='The directory to which the output PDB files will be written. Only used when -pdbdir is active' )
 parser.add_argument( "-outsilent", type=str, default="out.silent", help='The name of the silent file to which output structs will be written. Only used when -silent is active' )
 parser.add_argument( "-runlist", type=str, default='', help="The path of a list of pdb tags to run. Only used when -pdbdir is active (default: ''; Run all PDBs)" )
 parser.add_argument( "-checkpoint_name", type=str, default='check.point', help="The name of a file where tags which have finished will be written (default: check.point)" )
@@ -51,6 +51,7 @@ parser.add_argument( "-max_amide_dist", type=float, default=3.0, help='The maxim
 parser.add_argument( "-recycle", type=int, default=3, help='The number of AF2 recycles to perform (default: 3)' )
 parser.add_argument( "-no_initial_guess", action="store_true", default=False, help='When active, the model will not use an initial guess (default: False)' )
 parser.add_argument( "-force_monomer", action="store_true", default=False, help='When active, the model will predict the structure of a monomer (default: False)' )
+parser.add_argument( "-overwrite_existent_results", action="store_false", default=True, help='' )
 
 args = parser.parse_args()
 
@@ -114,7 +115,7 @@ class AF2_runner():
     def featurize(self, feat_holder) -> None:
 
         all_atom_positions, all_atom_masks = af2_util.af2_get_atom_positions(feat_holder.pose, self.struct_manager.tmp_fn)
-
+        logger.info(f'{all_atom_positions.shape = } {all_atom_masks.shape = }')
         feat_holder.initial_all_atom_positions = all_atom_positions
         feat_holder.initial_all_atom_masks     = all_atom_masks
 
@@ -126,6 +127,8 @@ class AF2_runner():
             feat_holder.residue_mask = [False for i in range(len(feat_holder.seq))]
         else:
             # For interfaces fix the target and predict the binder
+            # note: the false indexes is the binderlen + 1, 
+            # [False, False, False, False, False, False, False, True, ...]
             feat_holder.residue_mask = [int(i) > feat_holder.binderlen for i in range(len(feat_holder.seq))]
 
         template_dict = af2_util.generate_template_features(
@@ -547,16 +550,26 @@ else:
 
 struct_manager = StructManager(args)
 af2_runner     = AF2_runner(args, struct_manager)
-if os.path.isfile(struct_manager.score_fn):
-    os.remove(struct_manager.score_fn)
 
-for pdb in struct_manager.iterate():
+if os.path.isfile(struct_manager.score_fn):
+    if args.overwrite_existent_results:
+        print(f'Found existent score file {struct_manager.score_fn}. Overwrite')
+        os.remove(struct_manager.score_fn)
+    else:
+        print(f'Found existent score file {struct_manager.score_fn}. Append new scores')
+
+pdb_files = list(struct_manager.iterate())
+for pdb in tqdm(pdb_files):
 
     if args.debug: af2_runner.process_struct(pdb)
 
     else: # When not in debug mode the script will continue to run even when some poses fail
         t0 = timer()
-
+        if not args.overwrite_existent_results:
+            out_pdb_file = Path(args.outpdbdir) / (Path(pdb).stem + '_af2pred.pdb')
+            if out_pdb_file.exists():
+                print(f'{args.overwrite_existent_results = }, {out_pdb_file} exists. Skipping')
+                continue
         try: af2_runner.process_struct(pdb)
 
         except KeyboardInterrupt: sys.exit( "Script killed by Control+C, exiting" )

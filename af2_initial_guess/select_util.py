@@ -3,6 +3,7 @@ import shutil
 from collections import defaultdict
 from pathlib import Path
 from typing import Union
+
 from pandas import DataFrame
 
 logger = logging.getLogger()
@@ -13,10 +14,8 @@ logging.basicConfig(
 )
 
 
-def select_high_potentials(
-    af_pred_pdb_dir,
+def parse_score_file(
     score_fn="out.sc",
-    out_dir:Union[str, Path, None]=None,
     thereshold=10,
     thereshold_field="pae_interaction",
     larger_is_better=False,
@@ -40,6 +39,24 @@ def select_high_potentials(
         selected_df = df[df[thereshold_field] < thereshold]
     logger.info(f"All {thereshold_field} summary\n{df[thereshold_field].describe()}")
     logger.info(f"{len(selected_df) = }")
+    return selected_df
+
+
+def select_high_potentials(
+    af_pred_pdb_dir,
+    score_fn="out.sc",
+    out_dir: Union[str, Path, None] = None,
+    thereshold=10,
+    thereshold_field="pae_interaction",
+    larger_is_better=False,
+):
+    """pae_interaction < 10 is selected as high potential"""
+    if not Path(score_fn).exists():
+        logger.info(f'{score_fn = } not exists')
+        return
+    selected_df = parse_score_file(
+        score_fn, thereshold, thereshold_field, larger_is_better
+    )
     af_pred_pdb_dir = Path(af_pred_pdb_dir)
     if out_dir is None:
         out_dir = af_pred_pdb_dir.with_name(f"{af_pred_pdb_dir.name}_selected")
@@ -54,4 +71,5 @@ def select_high_potentials(
 
 
 if __name__ == "__main__":
-    select_high_potentials("examples/inputs/pdbs", "tmp")
+    # select_high_potentials("examples/inputs/pdbs", "tmp")
+    parse_score_file()

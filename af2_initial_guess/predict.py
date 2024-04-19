@@ -559,6 +559,7 @@ if os.path.isfile(struct_manager.score_fn):
         print(f'Found existent score file {struct_manager.score_fn}. Append new scores')
 
 pdb_files = list(struct_manager.iterate())
+logger.info(f'{len(pdb_files) = }')
 for pdb in tqdm(pdb_files):
 
     if args.debug: af2_runner.process_struct(pdb)
